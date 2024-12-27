@@ -1,0 +1,57 @@
+const express = require('express');
+const bodyParser = require('body-parser');
+
+const app = express();
+const PORT = 3000;
+
+// Middleware
+app.use(bodyParser.json());
+
+// In-memory data storage (for simplicity, replaceable with a database)
+let incidents = [];
+
+// Routes
+// 1. Get all incidents
+app.get('/api/incidents', (req, res) => {
+  res.json(incidents);
+});
+
+// 2. Create a new incident
+app.post('/api/incidents', (req, res) => {
+  const { title, description, status } = req.body;
+  const newIncident = {
+    id: incidents.length + 1,
+    title,
+    description,
+    status: status || 'Open',
+    createdAt: new Date(),
+  };
+  incidents.push(newIncident);
+  res.status(201).json(newIncident);
+});
+
+// 3. Update an incident's status
+app.put('/api/incidents/:id', (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  const incident = incidents.find((inc) => inc.id == id);
+  if (!incident) {
+    return res.status(404).json({ error: 'Incident not found' });
+  }
+
+  incident.status = status || incident.status;
+  res.json(incident);
+});
+
+// 4. Delete an incident
+app.delete('/api/incidents/:id', (req, res) => {
+  const { id } = req.params;
+  incidents = incidents.filter((inc) => inc.id != id);
+  res.status(204).send();
+});
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
